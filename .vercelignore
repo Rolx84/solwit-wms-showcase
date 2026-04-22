@@ -1,0 +1,8 @@
+design-source/
+build/
+showcase/OrbitScene.jsx
+showcase/Shared.jsx
+showcase/VariationC.jsx
+showcase/Sections.jsx
+*.log
+.claude/

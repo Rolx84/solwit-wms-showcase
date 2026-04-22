@@ -199,7 +199,7 @@ function Ecosystem() {
           ))}
         </div>
 
-        <div style={{marginTop:30, padding:32, background:"var(--bg)", borderRadius:20, display:"grid", gridTemplateColumns:"1fr 1fr", gap:32, alignItems:"center"}}>
+        <div className="eco__detail" style={{marginTop:30, padding:32, background:"var(--bg)", borderRadius:20, display:"grid", gridTemplateColumns:"1fr 1fr", gap:32, alignItems:"center"}}>
           <div>
             <div className="section-lbl" style={{fontSize:12}}>{active.toLowerCase()}</div>
             <h3 className="h3">{ECO[active].title}</h3>
@@ -237,10 +237,10 @@ function Proof() {
   return (
     <section className="section">
       <div className="wrap">
-        <div style={{display:"grid", gridTemplateColumns:"1.4fr 1fr", gap:40, alignItems:"center"}}>
+        <div className="proof__grid" style={{display:"grid", gridTemplateColumns:"1.4fr 1fr", gap:40, alignItems:"center"}}>
           <div>
             <div className="section-lbl">klientu atsauksme</div>
-            <h2 className="h2" style={{fontSize:40}}>"Mēs noņēmām trīs spreadsheet un pievienojām vienu API. Nakšu maiņa kļuva par ceturkšņa slodzi."</h2>
+            <h2 className="h2 proof__quote" style={{fontSize:40}}>"Mēs noņēmām trīs spreadsheet un pievienojām vienu API. Nakšu maiņa kļuva par ceturkšņa slodzi."</h2>
             <div style={{marginTop:24, display:"flex", alignItems:"center", gap:14}}>
               <div style={{width:48, height:48, borderRadius:"50%", background:"linear-gradient(135deg,#E082FE,#62358F)"}}/>
               <div>
@@ -249,7 +249,7 @@ function Proof() {
               </div>
             </div>
           </div>
-          <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:14}}>
+          <div className="proof__stats" style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:14}}>
             <StatCard num="−68%" lbl="kļūdu samazinājums" tone="purple"/>
             <StatCard num="3.2×" lbl="ātrāka ienākošā apstrāde" tone="muted"/>
             <StatCard num="14 d." lbl="vidējais onboardings" tone="white"/>

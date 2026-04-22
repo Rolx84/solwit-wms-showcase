@@ -6,7 +6,7 @@ function DashPreview() {
         <span className="d r"/><span className="d y"/><span className="d g"/>
         <span className="url">app.solwit.lv/wms/riga-01/ienakoshie</span>
       </div>
-      <div style={{display:"grid", gridTemplateColumns:"200px 1fr", minHeight:360}}>
+      <div className="dash__grid" style={{display:"grid", gridTemplateColumns:"200px 1fr", minHeight:360}}>
         {/* sidebar */}
         <div style={{background:"#F8F5FB", padding:18, borderRight:"1px solid var(--border-soft)", fontFamily:"var(--font-mono)", fontSize:13}}>
           <div style={{fontSize:11, color:"var(--ink-3)", marginBottom:10, textTransform:"uppercase", letterSpacing:".08em"}}>Noliktavas</div>
@@ -129,7 +129,7 @@ function HeroC() {
   }, []);
 
   return (
-    <div ref={ref} style={{position:"relative", padding:"40px 40px 100px", maxWidth:1440, margin:"0 auto", minHeight:760, overflow:"hidden"}} id="top">
+    <div ref={ref} className="hero-c" style={{position:"relative", maxWidth:1440, margin:"0 auto", overflow:"hidden"}} id="top">
       {/* spatial orb scene */}
       <div style={{position:"absolute", inset:0, pointerEvents:"none", perspective:"1200px"}}>
         {/* background ambient glow */}
@@ -157,7 +157,7 @@ function HeroC() {
       </div>
 
       {/* headline floats above the orbs */}
-      <div style={{position:"relative", zIndex:5, maxWidth:720, padding:"80px 0 60px"}}>
+      <div className="hero-c__copy" style={{position:"relative", zIndex:5, maxWidth:720}}>
         <div className="hero-a__tag"><span className="pulse"/> Reāllaika noliktavas vadība</div>
         <h1 className="h1" style={{textShadow:"0 2px 30px rgba(255,255,255,0.6), 0 0 80px rgba(255,255,255,0.4)"}}>
           Redziet savu noliktavu<br/>
@@ -180,7 +180,7 @@ function HeroC() {
       </div>
 
       {/* dashboard preview */}
-      <div style={{position:"relative", zIndex:5, marginTop:40}}>
+      <div className="hero-c__dash" style={{position:"relative", zIndex:5, marginTop:40}}>
         <DashPreview />
       </div>
     </div>

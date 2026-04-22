@@ -7,7 +7,7 @@ function Header({ variation, setVariation, active = "products" }) {
         <a className="hdr__logo" href="#top">
           <img src="../assets/logo.svg" alt="Solwit" />
         </a>
-        <nav className="hdr__nav">
+        <nav className="hdr__nav hdr__nav--hide-mobile">
           <a className={active==="products"?"active":""}>Produkti</a>
           <a>Risinājumi</a>
           <a>Klienti</a>
@@ -15,8 +15,8 @@ function Header({ variation, setVariation, active = "products" }) {
           <a>Kontakti</a>
         </nav>
         <div className="hdr__actions">
-          <span className="hdr__crumb">Produkti <span style={{opacity:.4,margin:"0 6px"}}>/</span> <b>WMS</b></span>
-          <button className="btn btn--secondary btn--sm">Pieprasīt demo</button>
+          <span className="hdr__crumb hdr__crumb--hide-mobile">Produkti <span style={{opacity:.4,margin:"0 6px"}}>/</span> <b>WMS</b></span>
+          <button className="btn btn--secondary btn--sm hdr__btn--hide-mobile">Pieprasīt demo</button>
           <button className="btn btn--primary btn--sm">
             Sākt
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>

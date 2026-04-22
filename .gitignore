@@ -4,3 +4,4 @@ design-source/
 *.log
 .DS_Store
 .claude/
+build/app-src.jsx
