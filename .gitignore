@@ -1,0 +1,6 @@
+node_modules/
+.vercel/
+design-source/
+*.log
+.DS_Store
+.claude/

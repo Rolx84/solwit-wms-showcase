@@ -1,0 +1,238 @@
+/* ==========================================================================
+   Solwit Design System — colors & type tokens
+   ========================================================================== */
+
+/* Fonts: loaded from Google Fonts (nearest matches where needed) ---------- */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Fragment+Mono&family=Poppins:wght@400;500&family=Jost:wght@400&display=swap');
+
+:root {
+  /* ---------- Brand purple ---------- */
+  --purple-dark:     #62358F;   /* primary — buttons, section pills, links */
+  --purple-mid:      #9D51E9;   /* electric accent — mono text, highlights */
+  --purple-light:    #E082FE;   /* orb gradient partner */
+  --purple-pale:     #E2D3F2;   /* faint strokes, decorative */
+  --purple-plum:     #3B2C4A;   /* official wordmark plum */
+  --purple-deep:     #2C4B65;   /* rare deep companion (footer accents) */
+  --purple-lift:     #692BB0;   /* pressed/dark state */
+
+  /* ---------- Gradient-orb companions ---------- */
+  --pink-bright:     #F22FB0;
+  --pink-soft:       #FEA4DA;
+  --blue-dot:        #013281;   /* dot-diamond BG */
+
+  /* ---------- Ink / text ---------- */
+  --ink:             #202020;
+  --ink-2:           #3F3F3F;
+  --ink-3:           #6B7280;   /* muted / footer */
+  --ink-4:           #A5A5A5;
+
+  /* ---------- Surfaces ---------- */
+  --bg:              #EEEEEE;   /* page — off-white */
+  --bg-2:            #F1F1F1;
+  --bg-3:            #FBFBFB;
+  --surface-card:    #FFFFFF;
+  --surface-muted:   #E1E1E0;   /* neutral feature card */
+  --surface-soft:    #F8F8F8;
+  --surface-dark:    #444444;   /* customer-wall slab */
+
+  /* ---------- Lines ---------- */
+  --border:          #B4B4B4;
+  --border-soft:     #D9D9D9;
+  --border-light:    #E2D3F2;
+
+  /* ---------- Semantic (defaults; tuned to brand) ---------- */
+  --fg:              var(--ink);
+  --fg-muted:        var(--ink-3);
+  --accent:          var(--purple-dark);
+  --accent-hi:       var(--purple-mid);
+  --link:            var(--purple-dark);
+  --success:         #2E8B57;
+  --warning:         #C48A00;
+  --danger:          #B4322C;
+
+  /* ---------- Shadow / elevation ---------- */
+  --shadow-card:     0 4px 24px rgba(59, 18, 101, 0.08);
+  --shadow-lift:     0 8px 40px rgba(59, 18, 101, 0.14);
+  --shadow-hairline: 0 0 0 1px rgba(60, 61, 63, 0.2);
+
+  /* ---------- Radii ---------- */
+  --radius-xs:       8px;      /* buttons */
+  --radius-sm:       12px;     /* section pills, inputs */
+  --radius-md:       18px;     /* mid cards */
+  --radius-lg:       24px;     /* feature cards */
+  --radius-xl:       50px;     /* hero capsule slab */
+  --radius-full:     9999px;
+
+  /* ---------- Spacing ---------- */
+  --space-1:         4px;
+  --space-2:         8px;
+  --space-3:         12px;
+  --space-4:         16px;
+  --space-5:         24px;
+  --space-6:         32px;
+  --space-7:         44px;
+  --space-8:         56px;
+  --space-9:         80px;
+  --space-10:       120px;
+  --space-11:       184px;     /* page gutter at 1920 */
+  --space-12:       190px;     /* block rhythm */
+
+  /* ---------- Typography ---------- */
+  --font-display:    "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-body:       "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-mono:       "Fragment Mono", ui-monospace, monospace;
+  --font-contact:    "Poppins", system-ui, sans-serif;
+  --font-legal:      "Jost", system-ui, sans-serif;
+
+  /* Type scale — px figures sourced from METADATA.md usage counts */
+  --text-hero:       90px;   /* Plus Jakarta Sans Bold / ExtraBold */
+  --text-mega:       80px;   /* stat numerals */
+  --text-h1:         56px;
+  --text-h2:         44px;
+  --text-h3:         36px;
+  --text-h4:         32px;
+  --text-h5:         24px;   /* also mono section label size */
+  --text-lg:         20px;
+  --text-md:         18px;   /* default body */
+  --text-base:       16px;
+  --text-sm:         14px;
+  --text-xs:         12px;
+
+  --lh-tight:        1.0;
+  --lh-heading:      1.11;  /* 100/90 */
+  --lh-snug:         1.22;
+  --lh-body:         1.44;  /* 26/18 */
+  --lh-mono:         1.25;  /* 40/32 */
+
+  --tracking-tight:  -0.02em;  /* used on nav items */
+  --tracking-normal: 0;
+
+  --weight-reg:      400;
+  --weight-med:      500;
+  --weight-semi:     600;
+  --weight-bold:     700;
+  --weight-xbold:    800;
+
+  /* ---------- Motion ---------- */
+  --ease-out:        cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast:        120ms;
+  --dur-med:         180ms;
+  --dur-slow:        320ms;
+}
+
+/* ==========================================================================
+   Semantic element styles
+   ========================================================================== */
+html, body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, .h1 {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-hero);
+  line-height: 100px;
+  color: var(--ink);
+  margin: 0;
+}
+h2, .h2 {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-h2);
+  line-height: 1.11;
+  color: var(--ink);
+  margin: 0;
+}
+h3, .h3 {
+  font-family: var(--font-display);
+  font-weight: var(--weight-semi);
+  font-size: var(--text-h3);
+  line-height: 1.22;
+  color: var(--ink);
+  margin: 0;
+}
+h4, .h4 {
+  font-family: var(--font-display);
+  font-weight: var(--weight-med);
+  font-size: var(--text-h4);
+  line-height: 40px;
+  color: var(--ink);
+  margin: 0;
+}
+
+p { margin: 0; }
+
+/* Signature: mono section label in {braces} */
+.section-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-h5);
+  line-height: 32px;
+  color: var(--purple-mid);
+}
+.section-label::before { content: "{"; }
+.section-label::after  { content: "}"; }
+
+/* Mono sub-hero */
+.hero-sub {
+  font-family: var(--font-mono);
+  font-size: var(--text-h4);
+  line-height: 40px;
+  color: var(--ink);
+}
+
+/* Card title set in mono, used on feature cards */
+.card-title-mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-h5);
+  line-height: 32px;
+  color: var(--ink);
+}
+
+/* Body */
+.body {
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  line-height: 26px;
+  color: var(--ink);
+}
+.body-muted {
+  color: var(--ink-3);
+  font-size: var(--text-sm);
+  line-height: 18px;
+}
+
+/* Contact rows (footer) */
+.contact-row {
+  font-family: var(--font-contact);
+  font-weight: var(--weight-med);
+  font-size: var(--text-base);
+  line-height: 20px;
+  color: var(--ink);
+}
+
+/* Legal copyright line */
+.legal {
+  font-family: var(--font-legal);
+  font-size: var(--text-xs);
+  line-height: 14px;
+  color: var(--ink-3);
+}
+
+/* ==========================================================================
+   Utility: the solwit dot field (use as a background on any container)
+   ========================================================================== */
+.solwit-dotfield {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(1,50,129,0.44) 0%, rgba(1,50,129,0) 35%),
+    radial-gradient(circle at 80% 30%, rgba(1,50,129,0.38) 0%, rgba(1,50,129,0) 35%),
+    radial-gradient(circle at 50% 65%, rgba(1,50,129,0.30) 0%, rgba(1,50,129,0) 40%),
+    radial-gradient(circle at 15% 85%, rgba(1,50,129,0.28) 0%, rgba(1,50,129,0) 30%),
+    radial-gradient(circle at 85% 80%, rgba(1,50,129,0.32) 0%, rgba(1,50,129,0) 32%);
+  background-size: 360px 360px;
+}
