@@ -145,6 +145,53 @@ function makeSunTexture(THREE) {
   return tex;
 }
 
+// Per-planet gradient texture — hot-spot highlight + body color + plum shadow,
+// matching the DOM-orb radial-gradient pattern so spheres read as the same
+// "3D marble" aesthetic rather than flat-shaded lit surfaces.
+function makePlanetTexture(THREE, colorHex) {
+  const w = 512, h = 256;
+  const c = document.createElement("canvas");
+  c.width = w; c.height = h;
+  const ctx = c.getContext("2d");
+  // base body color
+  ctx.fillStyle = colorHex;
+  ctx.fillRect(0, 0, w, h);
+  // hot-spot highlight — white core fading through body color
+  const hot = ctx.createRadialGradient(w*0.32, h*0.28, 0, w*0.32, h*0.28, w*0.48);
+  hot.addColorStop(0,    "rgba(255,255,255,0.95)");
+  hot.addColorStop(0.15, "rgba(255,255,255,0.55)");
+  hot.addColorStop(0.55, "rgba(255,255,255,0)");
+  ctx.fillStyle = hot; ctx.fillRect(0, 0, w, h);
+  // plum shadow on opposite side
+  const dark = ctx.createRadialGradient(w*0.78, h*0.72, 0, w*0.78, h*0.72, w*0.55);
+  dark.addColorStop(0,   "rgba(42,18,64,0.85)");
+  dark.addColorStop(0.4, "rgba(42,18,64,0.35)");
+  dark.addColorStop(1,   "rgba(42,18,64,0)");
+  ctx.fillStyle = dark; ctx.fillRect(0, 0, w, h);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace || tex.colorSpace;
+  tex.needsUpdate = true;
+  return tex;
+}
+
+// Neutral white radial gradient — used for per-planet glow sprites, tinted via
+// material.color. Separate from bloomTex (which has pink baked in) so the
+// glow matches each planet's hue.
+function makeNeutralGlow(THREE) {
+  const size = 256;
+  const c = document.createElement("canvas");
+  c.width = size; c.height = size;
+  const ctx = c.getContext("2d");
+  const g = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
+  g.addColorStop(0,    "rgba(255,255,255,1)");
+  g.addColorStop(0.35, "rgba(255,255,255,0.4)");
+  g.addColorStop(1,    "rgba(255,255,255,0)");
+  ctx.fillStyle = g; ctx.fillRect(0, 0, size, size);
+  const tex = new THREE.CanvasTexture(c);
+  tex.needsUpdate = true;
+  return tex;
+}
+
 // Wispy dashed ring: a thin torus rendered with a radial alpha mask, so the
 // edges fade out instead of looking like a hard hoop.
 function makeRing(THREE, radius, color) {
@@ -165,6 +212,7 @@ function makeRing(THREE, radius, color) {
 function HeroC() {
   const wrapRef = React.useRef(null);
   const canvasRef = React.useRef(null);
+  const tooltipRef = React.useRef(null);
 
   React.useEffect(() => {
     const THREE = window.THREE;
@@ -205,7 +253,7 @@ function HeroC() {
 
     // --- sun ----------------------------------------------------------
     const sunTex = makeSunTexture(THREE);
-    const sunGeo = new THREE.SphereGeometry(22, 48, 48);
+    const sunGeo = new THREE.SphereGeometry(34, 64, 64);
     const sunMat = new THREE.MeshBasicMaterial({ map: sunTex });
     const sun = new THREE.Mesh(sunGeo, sunMat);
     disk.add(sun);
@@ -243,30 +291,31 @@ function HeroC() {
     rings.forEach(r => disk.add(r));
 
     // --- planets ------------------------------------------------------
+    // Each planet gets its own gradient texture (white hot-spot / body color /
+    // plum shadow) so it reads like a 3D marble matching the DOM-orb aesthetic,
+    // not a flat-shaded lit sphere.
+    const neutralGlow = makeNeutralGlow(THREE);
     const ORBITS = window.ORBITS || [];
     const planets = ORBITS.map((p) => {
-      const geo = new THREE.SphereGeometry(p.size * 0.4, 32, 32);
-      const col = new THREE.Color(p.color);
-      const mat = new THREE.MeshStandardMaterial({
-        color: col,
-        emissive: col,
-        emissiveIntensity: 0.28,
-        roughness: 0.45,
-        metalness: 0.15,
-      });
+      // Bigger planets (0.55× vs 0.4× previously) so the scene feels populated
+      const radius = p.size * 0.55;
+      const geo = new THREE.SphereGeometry(radius, 48, 48);
+      const tex = makePlanetTexture(THREE, p.color);
+      const mat = new THREE.MeshBasicMaterial({ map: tex });
       const mesh = new THREE.Mesh(geo, mat);
 
-      // soft glow sprite behind each planet
+      // soft glow sprite behind each planet, tinted to planet color
       const glowMat = new THREE.SpriteMaterial({
-        map: bloomTex,
-        color: col,
+        map: neutralGlow,
+        color: new THREE.Color(p.color),
         transparent: true,
-        opacity: 0.55,
+        opacity: 0.7,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       });
       const glow = new THREE.Sprite(glowMat);
-      glow.scale.set(p.size * 1.9, p.size * 1.9, 1);
+      const glowBase = p.size * 2.2;
+      glow.scale.set(glowBase, glowBase, 1);
 
       const group = new THREE.Group();
       group.add(glow);
@@ -277,6 +326,11 @@ function HeroC() {
         data: p,
         group,
         mesh,
+        glow,
+        tex,
+        glowBase,
+        baseRadius: radius,
+        hoverScale: 1,   // eased up to ~1.35 on hover
         // ORBITS.speed is seconds-per-revolution-ish; convert to rad/s
         omega: (Math.PI * 2) / p.speed,
         phase: (p.offset / 360) * Math.PI * 2,
@@ -284,11 +338,21 @@ function HeroC() {
     });
 
     // --- interactions -------------------------------------------------
-    const mouse = { x: 0, y: 0, tx: 0, ty: 0 };
+    const mouse = { x: 0, y: 0, tx: 0, ty: 0, clientX: 0, clientY: 0, hasPointer: false };
+    const ndc = new THREE.Vector2();
+    const raycaster = new THREE.Raycaster();
+    const tooltip = tooltipRef.current;
+
     const onMove = (e) => {
       const r = wrap.getBoundingClientRect();
       mouse.tx = ((e.clientX - r.left) / r.width  - 0.5) * 2;
       mouse.ty = ((e.clientY - r.top)  / r.height - 0.5) * 2;
+      // NDC for raycaster: -1..1 in both axes
+      ndc.x =  ((e.clientX - r.left) / r.width)  * 2 - 1;
+      ndc.y = -((e.clientY - r.top)  / r.height) * 2 + 1;
+      mouse.clientX = e.clientX;
+      mouse.clientY = e.clientY;
+      mouse.hasPointer = true;
     };
     window.addEventListener("mousemove", onMove, { passive: true });
 
@@ -338,6 +402,9 @@ function HeroC() {
       const dt = Math.min(clock.getDelta(), 0.05);
       const t = clock.elapsedTime;
 
+      // scroll dolly — eased lerp gives that "inevitable fall" feel
+      scroll.eased = lerp(scroll.eased, scroll.progress, 0.08);
+
       // planets orbit
       planets.forEach((pl) => {
         const a = t * pl.omega + pl.phase;
@@ -346,9 +413,55 @@ function HeroC() {
         pl.mesh.rotation.y += dt * 0.6;
       });
 
-      // sun gentle pulse (~3%)
-      const pulse = 1 + Math.sin(t * 1.6) * 0.03;
-      sun.scale.setScalar(pulse);
+      // hover raycast: which planet is the cursor on? Only when mouse is active.
+      let hoveredKey = null;
+      if (mouse.hasPointer) {
+        raycaster.setFromCamera(ndc, camera);
+        const meshes = planets.map(p => p.mesh);
+        const hits = raycaster.intersectObjects(meshes, false);
+        if (hits.length > 0) {
+          const hit = hits[0];
+          hoveredKey = planets.find(p => p.mesh === hit.object).data.key;
+        }
+      }
+
+      // per-planet hover ease: hovered planet scales up + boosts glow.
+      planets.forEach((pl) => {
+        const target = pl.data.key === hoveredKey ? 1.45 : 1;
+        pl.hoverScale = lerp(pl.hoverScale, target, 0.14);
+        pl.mesh.scale.setScalar(pl.hoverScale);
+        pl.glow.scale.setScalar(pl.glowBase * (0.9 + (pl.hoverScale - 1) * 2.2));
+        pl.glow.material.opacity = 0.55 + (pl.hoverScale - 1) * 0.8;
+      });
+
+      // tooltip: position it at the hovered planet's screen-space coords.
+      if (tooltip) {
+        if (hoveredKey) {
+          const pl = planets.find(p => p.data.key === hoveredKey);
+          const world = pl.group.getWorldPosition(new THREE.Vector3());
+          const proj = world.project(camera);
+          const r = wrap.getBoundingClientRect();
+          const sx = (proj.x * 0.5 + 0.5) * r.width;
+          const sy = (-proj.y * 0.5 + 0.5) * r.height;
+          tooltip.style.transform = `translate(${sx}px, ${sy - 48}px) translateX(-50%)`;
+          tooltip.style.opacity = "1";
+          tooltip.textContent = pl.data.label;
+        } else {
+          tooltip.style.opacity = "0";
+        }
+      }
+
+      // sun: gentle idle pulse AND aggressive scroll growth.
+      // Scale lerps 1 → 3.2× as scroll progresses; bloom grows with it so the
+      // glow fills the frame. This is the "way bigger on scroll" moment.
+      const idlePulse = 1 + Math.sin(t * 1.6) * 0.03;
+      const scrollScale = 1 + scroll.eased * 2.2;   // 1 → 3.2
+      sun.scale.setScalar(idlePulse * scrollScale);
+      bloomLayers.forEach((layer, i) => {
+        const baseSizes = [110, 200, 340];
+        const s = baseSizes[i] * (1 + scroll.eased * 2.6);
+        layer.scale.set(s, s, 1);
+      });
       bloomLayers[0].material.opacity = 0.85 + Math.sin(t * 1.3) * 0.1;
 
       // mouse tilt with damping
@@ -357,12 +470,11 @@ function HeroC() {
       disk.rotation.z = mouse.x * 0.08;
       disk.rotation.x = 0.3 + mouse.y * 0.08;
 
-      // scroll dolly — eased lerp gives that "inevitable fall" feel
-      scroll.eased = lerp(scroll.eased, scroll.progress, 0.08);
-      const z = lerp(startZ, startZ * 0.3, scroll.eased);
+      // camera dolly — softened since sun growth is now the dramatic effect.
+      // Camera retreats slightly as sun grows so we don't end inside it.
+      const z = lerp(startZ, startZ * 0.75, scroll.eased);
       camera.position.z = z;
-      // slight y-dip so we feel like we dive under the disk as we go in
-      camera.position.y = lerp(80, 30, scroll.eased);
+      camera.position.y = lerp(80, 50, scroll.eased);
       camera.lookAt(0, 0, 0);
 
       renderer.render(scene, camera);
@@ -379,47 +491,53 @@ function HeroC() {
       // dispose resources
       sunGeo.dispose(); sunMat.dispose(); sunTex.dispose();
       bloomTex.dispose();
+      neutralGlow.dispose();
       bloomLayers.forEach(s => s.material.dispose());
       rings.forEach(r => { r.geometry.dispose(); r.material.dispose(); });
       planets.forEach(pl => {
         pl.mesh.geometry.dispose(); pl.mesh.material.dispose();
-        pl.group.children.forEach(c => c.material && c.material !== pl.mesh.material && c.material.dispose());
+        pl.tex.dispose();
+        pl.glow.material.dispose();
       });
       renderer.dispose();
     };
   }, []);
 
   return (
-    <div ref={wrapRef} className="hero-c" style={{position:"relative", maxWidth:1440, margin:"0 auto", overflow:"hidden"}} id="top">
-      {/* three.js canvas sits behind the overlay */}
+    <div ref={wrapRef} className="hero-c" id="top">
+      {/* three.js canvas fills the full viewport width */}
       <canvas ref={canvasRef} className="hero-c__canvas" aria-hidden="true"/>
 
-      {/* headline floats above the scene */}
-      <div className="hero-c__copy" style={{position:"relative", zIndex:5, maxWidth:720}}>
-        <div className="hero-a__tag"><span className="pulse"/> Reāllaika noliktavas vadība</div>
-        <h1 className="h1" style={{textShadow:"0 2px 30px rgba(255,255,255,0.6), 0 0 80px rgba(255,255,255,0.4)"}}>
-          Redziet savu noliktavu<br/>
-          <span className="h1--mono">tā, kā tā ir tagad</span>
-        </h1>
-        <p className="lead" style={{maxWidth:560, textShadow:"0 1px 16px rgba(255,255,255,0.7)"}}>
-          Katra skenēšana parādās 50 milisekundēs. Katrs lēmums — uz reāliem skaitļiem.
-          Noliktavas pārvaldība, kas seko līdzi jūsu biznesa ātrumam.
-        </p>
-        <div className="hero-a__actions">
-          <button className="btn btn--primary">
-            Pieprasīt demo
-            <Icon name="arrow" size={16} />
-          </button>
-          <button className="btn btn--ghost">
-            <Icon name="chart" size={16} />
-            Skatīt dzīvās atskaites
-          </button>
-        </div>
-      </div>
+      {/* planet-hover tooltip — positioned each frame via refs */}
+      <div ref={tooltipRef} className="hero-c__tooltip" aria-hidden="true"/>
 
-      {/* dashboard preview */}
-      <div className="hero-c__dash" style={{position:"relative", zIndex:5, marginTop:40}}>
-        <DashPreview />
+      {/* overlay stays inside the 1440 wrapper */}
+      <div className="hero-c__inner">
+        <div className="hero-c__copy">
+          <div className="hero-a__tag"><span className="pulse"/> Reāllaika noliktavas vadība</div>
+          <h1 className="h1" style={{textShadow:"0 2px 30px rgba(255,255,255,0.6), 0 0 80px rgba(255,255,255,0.4)"}}>
+            Redziet savu noliktavu<br/>
+            <span className="h1--mono">tā, kā tā ir tagad</span>
+          </h1>
+          <p className="lead" style={{maxWidth:560, textShadow:"0 1px 16px rgba(255,255,255,0.7)"}}>
+            Katra skenēšana parādās 50 milisekundēs. Katrs lēmums — uz reāliem skaitļiem.
+            Noliktavas pārvaldība, kas seko līdzi jūsu biznesa ātrumam.
+          </p>
+          <div className="hero-a__actions">
+            <button className="btn btn--primary">
+              Pieprasīt demo
+              <Icon name="arrow" size={16} />
+            </button>
+            <button className="btn btn--ghost">
+              <Icon name="chart" size={16} />
+              Skatīt dzīvās atskaites
+            </button>
+          </div>
+        </div>
+
+        <div className="hero-c__dash">
+          <DashPreview />
+        </div>
       </div>
     </div>
   );
