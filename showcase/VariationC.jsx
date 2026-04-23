@@ -291,13 +291,26 @@ function HeroC() {
       return s;
     });
 
-    // --- orbital rings (dashed, XZ plane) -----------------------------
-    // Repo-wide radii are 170/240/305. All rings use --purple-plum #3B2C4A
-    // which reads as a clean dark line on the off-white page behind the
-    // transparent canvas.
-    const RING_RADII = [170, 240, 305];
-    const rings = RING_RADII.map(r => makeRing(THREE, r, "#3B2C4A"));
-    rings.forEach(r => disk.add(r));
+    // --- orbital plane hint (subtle disk instead of explicit rings) ---
+    // A single radial-gradient disk laid flat at y=0. Hints at the orbital
+    // plane as a soft plum glow under the sun, fading to transparent before
+    // the outer orbit. No explicit ring geometry.
+    const planeTex = makeRadialTexture(THREE, [
+      [0.00, "rgba(59, 44, 74, 0.32)"],
+      [0.45, "rgba(59, 44, 74, 0.20)"],
+      [0.85, "rgba(59, 44, 74, 0.04)"],
+      [1.00, "rgba(59, 44, 74, 0)"],
+    ]);
+    const planeGeo = new THREE.CircleGeometry(380, 96);
+    const planeMat = new THREE.MeshBasicMaterial({
+      map: planeTex,
+      transparent: true,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    });
+    const orbitalPlane = new THREE.Mesh(planeGeo, planeMat);
+    orbitalPlane.rotation.x = -Math.PI / 2;
+    disk.add(orbitalPlane);
 
     // --- planets ------------------------------------------------------
     // Each planet gets its own gradient texture (white hot-spot / body color /
@@ -502,7 +515,7 @@ function HeroC() {
       bloomTex.dispose();
       neutralGlow.dispose();
       bloomLayers.forEach(s => s.material.dispose());
-      rings.forEach(r => { r.geometry.dispose(); r.material.dispose(); });
+      planeGeo.dispose(); planeMat.dispose(); planeTex.dispose();
       planets.forEach(pl => {
         pl.mesh.geometry.dispose(); pl.mesh.material.dispose();
         pl.tex.dispose();
