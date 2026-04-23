@@ -192,20 +192,28 @@ function makeNeutralGlow(THREE) {
   return tex;
 }
 
-// Wispy dashed ring: a thin torus rendered with a radial alpha mask, so the
-// edges fade out instead of looking like a hard hoop.
+// Orbital ring rendered as a dashed line in the XZ plane. Additive blending
+// on the previous torus disappeared against the light #EEEEEE page bg — using
+// normal blending with a darker purple + dashed pattern reads clearly without
+// feeling heavy.
 function makeRing(THREE, radius, color) {
-  const geo = new THREE.RingGeometry(radius - 0.35, radius + 0.35, 192, 1);
-  const mat = new THREE.MeshBasicMaterial({
+  const segments = 192;
+  const pts = [];
+  for (let i = 0; i <= segments; i++) {
+    const a = (i / segments) * Math.PI * 2;
+    pts.push(new THREE.Vector3(Math.cos(a) * radius, 0, Math.sin(a) * radius));
+  }
+  const geo = new THREE.BufferGeometry().setFromPoints(pts);
+  const mat = new THREE.LineDashedMaterial({
     color: new THREE.Color(color),
+    dashSize: 7,
+    gapSize: 5,
     transparent: true,
-    opacity: 0.35,
-    side: THREE.DoubleSide,
+    opacity: 0.55,
     depthWrite: false,
-    blending: THREE.AdditiveBlending,
   });
-  const ring = new THREE.Mesh(geo, mat);
-  ring.rotation.x = -Math.PI / 2; // lie flat on the orbital plane
+  const ring = new THREE.Line(geo, mat);
+  ring.computeLineDistances(); // required for dashed materials
   return ring;
 }
 
@@ -283,11 +291,12 @@ function HeroC() {
       return s;
     });
 
-    // --- orbital rings (wispy) ---------------------------------------
-    // Repo-wide radii are 170/240/305 (px-ish). Scene units are similar scale.
+    // --- orbital rings (dashed, XZ plane) -----------------------------
+    // Repo-wide radii are 170/240/305. All rings use --purple-plum #3B2C4A
+    // which reads as a clean dark line on the off-white page behind the
+    // transparent canvas.
     const RING_RADII = [170, 240, 305];
-    const ringColors = ["#9D51E9", "#9D51E9", "#62358F"];
-    const rings = RING_RADII.map((r, i) => makeRing(THREE, r, ringColors[i]));
+    const rings = RING_RADII.map(r => makeRing(THREE, r, "#3B2C4A"));
     rings.forEach(r => disk.add(r));
 
     // --- planets ------------------------------------------------------
