@@ -204,7 +204,7 @@ function Ecosystem() {
             <div className="section-lbl" style={{fontSize:12}}>{active.toLowerCase()}</div>
             <h3 className="h3">{ECO[active].title}</h3>
             <p className="body">{ECO[active].desc}</p>
-            <div style={{display:"flex", gap:10, marginTop:18}}>
+            <div style={{display:"flex", flexWrap:"wrap", gap:10, marginTop:18}}>
               {ECO[active].tags.map(t => (
                 <span key={t} style={{padding:"6px 12px", background:"var(--surface-muted)", borderRadius:8, fontFamily:"var(--font-mono)", fontSize:12, color:"var(--ink-2)"}}>{t}</span>
               ))}
