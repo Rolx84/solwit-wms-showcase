@@ -367,6 +367,9 @@ function HeroC() {
     const ndc = new THREE.Vector2();
     const raycaster = new THREE.Raycaster();
     const tooltip = tooltipRef.current;
+    const tooltipLabel = tooltip ? tooltip.firstElementChild : null;
+    const tmpWorld = new THREE.Vector3();
+    const tmpProj = new THREE.Vector3();
 
     const onMove = (e) => {
       const r = wrap.getBoundingClientRect();
@@ -462,20 +465,33 @@ function HeroC() {
         pl.glow.material.opacity = 0.55 + (pl.hoverScale - 1) * 0.8;
       });
 
-      // tooltip: position it at the hovered planet's screen-space coords.
-      if (tooltip) {
+      // tooltip: wrapper sits at the planet's projected screen center each
+      // frame; inner label is CSS-animated so it "pops" up out of the
+      // planet surface on hover. We also measure the planet's screen-space
+      // radius (via projecting a top-of-sphere point) and feed it to CSS as
+      // --pr so the label rests just above the surface regardless of
+      // planet size or scroll-driven distance.
+      if (tooltip && tooltipLabel) {
         if (hoveredKey) {
           const pl = planets.find(p => p.data.key === hoveredKey);
-          const world = pl.group.getWorldPosition(new THREE.Vector3());
-          const proj = world.project(camera);
+          pl.group.getWorldPosition(tmpWorld);
+          tmpProj.copy(tmpWorld).project(camera);
           const r = wrap.getBoundingClientRect();
-          const sx = (proj.x * 0.5 + 0.5) * r.width;
-          const sy = (-proj.y * 0.5 + 0.5) * r.height;
-          tooltip.style.transform = `translate(${sx}px, ${sy - 48}px) translateX(-50%)`;
-          tooltip.style.opacity = "1";
-          tooltip.textContent = pl.data.label;
+          const sx = (tmpProj.x * 0.5 + 0.5) * r.width;
+          const sy = (-tmpProj.y * 0.5 + 0.5) * r.height;
+          // approximate screen radius: project top-of-sphere point
+          tmpWorld.y += pl.baseRadius * pl.hoverScale;
+          tmpProj.copy(tmpWorld).project(camera);
+          const sTopY = (-tmpProj.y * 0.5 + 0.5) * r.height;
+          const screenRadius = Math.max(14, Math.abs(sy - sTopY));
+          tooltip.style.transform = `translate(${sx}px, ${sy}px)`;
+          tooltip.style.setProperty("--pr", `${screenRadius}px`);
+          if (tooltipLabel.textContent !== pl.data.label) {
+            tooltipLabel.textContent = pl.data.label;
+          }
+          tooltip.classList.add("is-on");
         } else {
-          tooltip.style.opacity = "0";
+          tooltip.classList.remove("is-on");
         }
       }
 
@@ -536,8 +552,11 @@ function HeroC() {
       {/* three.js canvas fills the full viewport width */}
       <canvas ref={canvasRef} className="hero-c__canvas" aria-hidden="true"/>
 
-      {/* planet-hover tooltip — positioned each frame via refs */}
-      <div ref={tooltipRef} className="hero-c__tooltip" aria-hidden="true"/>
+      {/* planet-hover tooltip — wrapper positioned each frame by JS,
+          inner label animates scale+opacity from planet surface via CSS */}
+      <div ref={tooltipRef} className="hero-c__tooltip" aria-hidden="true">
+        <span className="hero-c__tooltip-label"></span>
+      </div>
 
       {/* overlay stays inside the 1440 wrapper */}
       <div className="hero-c__inner">
@@ -557,7 +576,7 @@ function HeroC() {
             textShadow:"0 1px 12px rgba(255,255,255,0.75)",
           }}>
             viens datu slānis<br/>
-            Katra kustība
+            katra kustība
           </p>
           <p className="lead" style={{maxWidth:560, textShadow:"0 1px 16px rgba(255,255,255,0.7)"}}>
             Katra skenēšana parādās 50 milisekundēs. Katrs lēmums — uz reāliem skaitļiem.
