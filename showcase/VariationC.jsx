@@ -430,12 +430,15 @@ function HeroC() {
       // scroll dolly — eased lerp gives that "inevitable fall" feel
       scroll.eased = lerp(scroll.eased, scroll.progress, 0.08);
 
-      // planets orbit; orientation stays fixed so the painted hot-spot
-      // always reads as lit from the viewer's direction — no rotation.
+      // Planets orbit. Mesh Y-rotation blends 30% toward sun-facing so the
+      // painted hot-spot drifts subtly as the planet orbits — viewer stays
+      // the dominant light source, but you can tell each body is moving
+      // through 3D space.
       planets.forEach((pl) => {
         const a = t * pl.omega + pl.phase;
         const r = pl.data.radius;
         pl.group.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
+        pl.mesh.rotation.y = (-a - Math.PI / 2) * 0.3;
       });
 
       // hover raycast: which planet is the cursor on? Only when mouse is active.
