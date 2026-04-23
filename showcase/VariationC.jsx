@@ -372,26 +372,28 @@ function HeroC() {
     const tmpProj = new THREE.Vector3();
 
     const onMove = (e) => {
-      const r = wrap.getBoundingClientRect();
-      mouse.tx = ((e.clientX - r.left) / r.width  - 0.5) * 2;
-      mouse.ty = ((e.clientY - r.top)  / r.height - 0.5) * 2;
-      // NDC for raycaster: -1..1 in both axes
-      ndc.x =  ((e.clientX - r.left) / r.width)  * 2 - 1;
-      ndc.y = -((e.clientY - r.top)  / r.height) * 2 + 1;
+      // reuse cached rect; mousemove fires often, each getBoundingClientRect
+      // would trigger layout reads that can synchronize with JS writes.
+      mouse.tx = ((e.clientX - wrapRect.left) / wrapRect.width  - 0.5) * 2;
+      mouse.ty = ((e.clientY - wrapRect.top)  / wrapRect.height - 0.5) * 2;
+      ndc.x =  ((e.clientX - wrapRect.left) / wrapRect.width)  * 2 - 1;
+      ndc.y = -((e.clientY - wrapRect.top)  / wrapRect.height) * 2 + 1;
       mouse.clientX = e.clientX;
       mouse.clientY = e.clientY;
       mouse.hasPointer = true;
     };
     window.addEventListener("mousemove", onMove, { passive: true });
 
+    // Cached wrap rect — refreshed only on scroll and resize, reused in the
+    // render loop so we don't force layout on every frame.
+    let wrapRect = wrap.getBoundingClientRect();
     const scroll = { progress: 0, eased: 0 };
     const onScroll = () => {
-      const r = wrap.getBoundingClientRect();
-      const h = r.height || 1;
+      wrapRect = wrap.getBoundingClientRect();
+      const h = wrapRect.height || 1;
       // progress = how far into the hero we've scrolled (0 at top, 1 when
       // hero is fully above the fold).
-      const p = Math.min(1, Math.max(0, -r.top / h));
-      scroll.progress = p;
+      scroll.progress = Math.min(1, Math.max(0, -wrapRect.top / h));
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
@@ -405,6 +407,7 @@ function HeroC() {
       camera.aspect = w / h;
       camera.position.z = baseZ() * (1 - scroll.eased * 0.7);
       camera.updateProjectionMatrix();
+      wrapRect = wrap.getBoundingClientRect();
     };
     const ro = new ResizeObserver(resize);
     ro.observe(wrap);
@@ -476,13 +479,13 @@ function HeroC() {
           const pl = planets.find(p => p.data.key === hoveredKey);
           pl.group.getWorldPosition(tmpWorld);
           tmpProj.copy(tmpWorld).project(camera);
-          const r = wrap.getBoundingClientRect();
-          const sx = (tmpProj.x * 0.5 + 0.5) * r.width;
-          const sy = (-tmpProj.y * 0.5 + 0.5) * r.height;
+          // use cached wrapRect — no getBoundingClientRect() per frame
+          const sx = (tmpProj.x * 0.5 + 0.5) * wrapRect.width;
+          const sy = (-tmpProj.y * 0.5 + 0.5) * wrapRect.height;
           // approximate screen radius: project top-of-sphere point
           tmpWorld.y += pl.baseRadius * pl.hoverScale;
           tmpProj.copy(tmpWorld).project(camera);
-          const sTopY = (-tmpProj.y * 0.5 + 0.5) * r.height;
+          const sTopY = (-tmpProj.y * 0.5 + 0.5) * wrapRect.height;
           const screenRadius = Math.max(14, Math.abs(sy - sTopY));
           tooltip.style.transform = `translate(${sx}px, ${sy}px)`;
           tooltip.style.setProperty("--pr", `${screenRadius}px`);

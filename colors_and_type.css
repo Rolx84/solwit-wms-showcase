@@ -2,9 +2,8 @@
    Solwit Design System — colors & type tokens
    ========================================================================== */
 
-/* Fonts: loaded from Google Fonts — only families actually used by the showcase
-   (Poppins + Jost dropped; defined as tokens but never rendered on this page). */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fragment+Mono&display=swap');
+/* Fonts now loaded via <link> in the HTML head so they fetch in parallel
+   with this stylesheet instead of being chained behind an @import. */
 
 :root {
   /* ---------- Brand purple ---------- */

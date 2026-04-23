@@ -1,5 +1,6 @@
-/* Solwit WMS landing showcase — r2 */
-@import url("../colors_and_type.css");
+/* Solwit WMS landing showcase — r2
+   colors_and_type.css is now <link>ed directly in index.html so it
+   loads in parallel with this sheet instead of being @import-chained. */
 
 *, *::before, *::after { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); overflow-x: hidden; }
