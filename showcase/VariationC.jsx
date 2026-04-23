@@ -149,6 +149,11 @@ function makeSunTexture(THREE) {
 // matching the DOM-orb radial-gradient pattern so spheres read as the same
 // "3D marble" aesthetic rather than flat-shaded lit surfaces.
 function makePlanetTexture(THREE, colorHex) {
+  // Equirectangular layout: u wraps longitude, v is latitude.
+  // On three.js default SphereGeometry, u=0.75 maps to the planet's local -Z
+  // face. After mesh.lookAt(sunPos) each frame, that -Z face points at the
+  // sun — so placing the hot-spot there gives physically-consistent lighting
+  // regardless of orbital position. Plum shadow sits opposite at u=0.25.
   const w = 512, h = 256;
   const c = document.createElement("canvas");
   c.width = w; c.height = h;
@@ -156,16 +161,19 @@ function makePlanetTexture(THREE, colorHex) {
   // base body color
   ctx.fillStyle = colorHex;
   ctx.fillRect(0, 0, w, h);
-  // hot-spot highlight — white core fading through body color
-  const hot = ctx.createRadialGradient(w*0.32, h*0.28, 0, w*0.32, h*0.28, w*0.48);
-  hot.addColorStop(0,    "rgba(255,255,255,0.95)");
-  hot.addColorStop(0.15, "rgba(255,255,255,0.55)");
-  hot.addColorStop(0.55, "rgba(255,255,255,0)");
+  // sun-facing hot-spot at u=0.75, slightly above equator for top-down sun feel
+  const hx = w * 0.75, hy = h * 0.44;
+  const hot = ctx.createRadialGradient(hx, hy, 0, hx, hy, w*0.30);
+  hot.addColorStop(0,    "rgba(255,255,255,0.92)");
+  hot.addColorStop(0.18, "rgba(255,255,255,0.55)");
+  hot.addColorStop(0.55, "rgba(255,255,255,0.08)");
+  hot.addColorStop(1,    "rgba(255,255,255,0)");
   ctx.fillStyle = hot; ctx.fillRect(0, 0, w, h);
-  // plum shadow on opposite side
-  const dark = ctx.createRadialGradient(w*0.78, h*0.72, 0, w*0.78, h*0.72, w*0.55);
+  // terminator-side plum shadow at u=0.25 (opposite side of the sphere)
+  const dx = w * 0.25, dy = h * 0.58;
+  const dark = ctx.createRadialGradient(dx, dy, 0, dx, dy, w*0.34);
   dark.addColorStop(0,   "rgba(42,18,64,0.85)");
-  dark.addColorStop(0.4, "rgba(42,18,64,0.35)");
+  dark.addColorStop(0.4, "rgba(42,18,64,0.38)");
   dark.addColorStop(1,   "rgba(42,18,64,0)");
   ctx.fillStyle = dark; ctx.fillRect(0, 0, w, h);
   const tex = new THREE.CanvasTexture(c);
@@ -427,12 +435,14 @@ function HeroC() {
       // scroll dolly — eased lerp gives that "inevitable fall" feel
       scroll.eased = lerp(scroll.eased, scroll.progress, 0.08);
 
-      // planets orbit
+      // planets orbit + face the sun so lighting reads as coming from center
       planets.forEach((pl) => {
         const a = t * pl.omega + pl.phase;
         const r = pl.data.radius;
         pl.group.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
-        pl.mesh.rotation.y += dt * 0.6;
+        // lookAt(0,0,0) aligns local -Z with sun direction; texture hot-spot
+        // at u=0.75 sits on that -Z face, so it's always lit from the sun.
+        pl.mesh.lookAt(0, 0, 0);
       });
 
       // hover raycast: which planet is the cursor on? Only when mouse is active.
