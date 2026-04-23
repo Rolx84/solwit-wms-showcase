@@ -5,7 +5,7 @@ function Header({ variation, setVariation, active = "products" }) {
     <header className="hdr">
       <div className="hdr__inner">
         <a className="hdr__logo" href="#top">
-          <img src="../assets/logo.svg" alt="Solwit" />
+          <img src="../assets/logo.svg" alt="Solwit" width="106" height="28" />
         </a>
         <nav className="hdr__nav hdr__nav--hide-mobile">
           <a className={active==="products"?"active":""}>Produkti</a>
@@ -32,7 +32,7 @@ function Footer() {
     <footer className="ftr">
       <div className="ftr__inner">
         <div className="ftr__brand">
-          <img src="../assets/logo-purple.svg" alt="Solwit" />
+          <img src="../assets/logo-purple.svg" alt="Solwit" width="121" height="32" />
           <p>Noliktavas vadība, kas pielāgojas jūsu procesiem — nevis otrādi.</p>
         </div>
         <div className="ftr__col">

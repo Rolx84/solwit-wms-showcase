@@ -235,7 +235,10 @@ function HeroC() {
     const renderer = new THREE.WebGLRenderer({
       canvas, antialias: true, alpha: true, powerPreference: "high-performance",
     });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    // DPR cap: 1 on mobile (retina phones would otherwise do 4× pixel work),
+    // 2 on desktop. Negligible visual difference on small screens, big CPU win.
+    const isMobileView = () => window.innerWidth < 768;
+    renderer.setPixelRatio(isMobileView() ? 1 : Math.min(window.devicePixelRatio || 1, 2));
     renderer.setClearColor(0x000000, 0); // transparent
     if (THREE.SRGBColorSpace) renderer.outputColorSpace = THREE.SRGBColorSpace;
 
@@ -422,14 +425,32 @@ function HeroC() {
     io.observe(wrap);
 
     // --- animation loop ----------------------------------------------
+    // Adaptive FPS: render at 60fps while the user is actively moving/
+    // scrolling (smooth parallax + hover) and drop to 30fps when idle.
+    // Planet orbit + sun pulse look identical at 30fps but the main-thread
+    // time halves — big PageSpeed win. rAF still schedules every frame so
+    // we stay in sync with the display; we just early-return mid-interval.
     const startZ = baseZ();
     let raf;
     const clock = new THREE.Clock();
     const lerp = (a, b, t) => a + (b - a) * t;
+    const IDLE_INTERVAL = 1000 / 30;
+    const ACTIVE_INTERVAL = 1000 / 60;
+    let lastInteraction = performance.now();
+    let lastRenderTime = 0;
+    const bump = () => { lastInteraction = performance.now(); };
+    window.addEventListener("mousemove", bump, { passive: true });
+    window.addEventListener("scroll",    bump, { passive: true });
 
     const render = () => {
       raf = requestAnimationFrame(render);
       if (!inView) return;
+      const nowMs = performance.now();
+      const interval = (nowMs - lastInteraction) < 500
+        ? ACTIVE_INTERVAL
+        : IDLE_INTERVAL;
+      if (nowMs - lastRenderTime < interval) return;
+      lastRenderTime = nowMs;
       const dt = Math.min(clock.getDelta(), 0.05);
       const t = clock.elapsedTime;
 
@@ -533,6 +554,8 @@ function HeroC() {
       cancelAnimationFrame(raf);
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("mousemove", bump);
+      window.removeEventListener("scroll", bump);
       ro.disconnect();
       io.disconnect();
       // dispose resources
