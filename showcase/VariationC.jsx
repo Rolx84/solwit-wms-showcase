@@ -543,10 +543,22 @@ function HeroC() {
       <div className="hero-c__inner">
         <div className="hero-c__copy">
           <div className="hero-a__tag"><span className="pulse"/> Reāllaika noliktavas vadība</div>
-          <h1 className="h1" style={{textShadow:"0 2px 30px rgba(255,255,255,0.6), 0 0 80px rgba(255,255,255,0.4)"}}>
-            Redziet savu noliktavu<br/>
-            <span className="h1--mono">tā, kā tā ir tagad</span>
+          <h1 className="h1" style={{textShadow:"0 2px 30px rgba(255,255,255,0.6), 0 0 80px rgba(255,255,255,0.4)", marginBottom:14}}>
+            Noliktava<br/>
+            vienotā sistēmā
           </h1>
+          <p style={{
+            fontFamily:"var(--font-mono)",
+            fontSize:"clamp(20px, 2.4vw, 34px)",
+            color:"var(--purple-mid)",
+            lineHeight:1.25,
+            letterSpacing:"-0.01em",
+            margin:"0 0 30px",
+            textShadow:"0 1px 12px rgba(255,255,255,0.75)",
+          }}>
+            viens datu slānis<br/>
+            Katra kustība
+          </p>
           <p className="lead" style={{maxWidth:560, textShadow:"0 1px 16px rgba(255,255,255,0.7)"}}>
             Katra skenēšana parādās 50 milisekundēs. Katrs lēmums — uz reāliem skaitļiem.
             Noliktavas pārvaldība, kas seko līdzi jūsu biznesa ātrumam.
